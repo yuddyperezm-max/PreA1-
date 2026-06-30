@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre-A1 Greetings | Uninorte</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #F4F6F8;
+    margin: 0;
+    padding: 24px 16px 60px;
+    color: #1A1A1A;
+  }
+  #app { max-width: 680px; margin: 0 auto; }
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1.5px solid #D3D1C7;
+    background: #fff;
+    border-radius: 8px;
+    padding: 9px 16px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  button:hover { background: #F1EFE8; }
+  button:active { transform: scale(0.98); }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .card-shell {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 28px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="card-shell">
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom: 2px solid #1B3A6B;">
+      <div>
+        <div style="font-size:11px; font-weight:600; color:#C8991A; letter-spacing:0.5px; text-transform:uppercase;">Pre-A1 &middot; Greetings</div>
+        <div style="font-size:21px; font-weight:600; color:#1B3A6B; margin-top:2px; line-height:1.3;">Good morning, good afternoon, good evening</div>
+        <div style="font-size:12px; color:#5F5E5A; margin-top:4px;">Instituto de Idiomas &middot; Universidad del Norte</div>
+      </div>
+      <div style="width:44px; height:44px; border-radius:10px; background:#1B3A6B; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i class="ti ti-school" style="font-size:22px; color:#fff;" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:6px; margin-bottom:1.75rem;" id="progressBar"></div>
+
+    <div id="stepContainer"></div>
+
+  </div>
+
+  <div style="text-align:center; font-size:11px; color:#888780; margin-top:16px;">
+    Pre-A1 &middot; Cesar, Colombia &middot; Material de práctica
+  </div>
+</div>
+
+<script>
+(function(){
+
+const TIME_COLORS = {
+  morning:   { bg:'#FAEEDA', border:'#EF9F27', text:'#854F0B', icon:'ti-sunrise' },
+  afternoon: { bg:'#E6F1FB', border:'#378ADD', text:'#0C447C', icon:'ti-sun' },
+  evening:   { bg:'#EEEDFE', border:'#7F77DD', text:'#3C3489', icon:'ti-moon-stars' }
+};
+
+const STEPS = ['listen','match','drag','organize','speak'];
+const STEP_LABELS = ['Listen','Match','Drag & drop','Organize','Speak'];
+let currentStep = 0;
+
+function renderProgress(){
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = STEPS.map((s,i)=>{
+    const active = i===currentStep;
+    const done = i<currentStep;
+    const barColor = done ? '#1B3A6B' : (active ? '#C8991A' : '#D3D1C7');
+    const labelColor = active ? '#C8991A' : (done ? '#1B3A6B' : '#888780');
+    return '<div style="flex:1;">'+
+      '<div style="height:4px; border-radius:2px; background:'+barColor+';"></div>'+
+      '<div style="font-size:11px; margin-top:4px; text-align:center; color:'+labelColor+'; font-weight:'+(active?'600':'400')+';">'+STEP_LABELS[i]+'</div>'+
+      '</div>';
+  }).join('');
+}
+
+function speak(text){
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = 0.85;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function timeIcon(t, size){
+  const c = TIME_COLORS[t];
+  return '<i class="ti '+c.icon+'" style="font-size:'+size+'px; color:'+c.border+';" aria-hidden="true"></i>';
+}
+
+function renderStep(){
+  renderProgress();
+  const container = document.getElementById('stepContainer');
+  const step = STEPS[currentStep];
+  if(step==='listen') container.innerHTML = listenHTML();
+  if(step==='match') container.innerHTML = matchHTML();
+  if(step==='drag') container.innerHTML = dragHTML();
+  if(step==='organize') container.innerHTML = organizeHTML();
+  if(step==='speak') container.innerHTML = speakHTML();
+  attachHandlers(step);
+}
+
+function listenHTML(){
+  const items = [
+    {t:'morning', phrase:'Good morning!'},
+    {t:'afternoon', phrase:'Good afternoon!'},
+    {t:'evening', phrase:'Good evening!'},
+    {t:'evening', phrase:'Good night, goodbye!'}
+  ];
+  return '<div>'+
+    '<p style="font-size:14px; color:#5F5E5A; margin-bottom:1rem;">Tap each card. Listen to the phrase.</p>'+
+    '<div style="display:grid; grid-template-columns: repeat(2,1fr); gap:12px; margin-bottom:1.5rem;">'+
+    items.map((it)=>{
+      const c = TIME_COLORS[it.t];
+      return '<button class="listenCard" data-phrase="'+it.phrase+'" style="cursor:pointer; text-align:left; border:1.5px solid '+c.border+'; background:'+c.bg+'; border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px;">'+
+        timeIcon(it.t,28)+
+        '<span style="font-size:16px; font-weight:600; color:'+c.text+';">'+it.phrase+'</span>'+
+        '<span style="font-size:12px; color:'+c.text+'; display:flex; align-items:center; gap:4px;"><i class="ti ti-volume" style="font-size:14px;" aria-hidden="true"></i>Tap to listen</span>'+
+        '</button>';
+    }).join('')+
+    '</div>'+
+    navHTML()+
+    '</div>';
+}
+
+function matchHTML(){
+  const pairs = [
+    {id:'m1', t:'morning', phrase:'Good morning'},
+    {id:'m2', t:'afternoon', phrase:'Good afternoon'},
+    {id:'m3', t:'evening', phrase:'Good evening'}
+  ];
+  const shuffledClocks = [
+    {t:'afternoon', label:'2:00 PM'},
+    {t:'evening', label:'8:00 PM'},
+    {t:'morning', label:'7:00 AM'}
+  ];
+  return '<div>'+
+    '<p style="font-size:14px; color:#5F5E5A; margin-bottom:1rem;">Match the greeting to the correct time.</p>'+
+    '<div style="display:flex; gap:20px;">'+
+    '<div style="flex:1; display:flex; flex-direction:column; gap:10px;">'+
+    pairs.map(p=>{
+      return '<button class="matchPhrase" data-id="'+p.id+'" data-t="'+p.t+'" style="cursor:pointer; text-align:left; border:1.5px solid #D3D1C7; background:#fff; border-radius:10px; padding:12px 14px; font-size:14px; font-weight:600;">'+p.phrase+'</button>';
+    }).join('')+
+    '</div>'+
+    '<div style="flex:1; display:flex; flex-direction:column; gap:10px;">'+
+    shuffledClocks.map(c=>{
+      return '<button class="matchClock" data-t="'+c.t+'" style="cursor:pointer; text-align:left; border:1.5px solid #D3D1C7; background:#fff; border-radius:10px; padding:12px 14px; font-size:14px; display:flex; align-items:center; gap:10px;">'+timeIcon(c.t,20)+'<span>'+c.label+'</span></button>';
+    }).join('')+
+    '</div>'+
+    '</div>'+
+    '<div id="matchFeedback" style="margin-top:1rem; font-size:13px; min-height:18px;"></div>'+
+    navHTML(true)+
+    '</div>';
+}
+
+function dragHTML(){
+  const greetings = [
+    {t:'morning', phrase:'Good morning'},
+    {t:'afternoon', phrase:'Good afternoon'},
+    {t:'evening', phrase:'Good evening'}
+  ];
+  return '<div>'+
+    '<p style="font-size:14px; color:#5F5E5A; margin-bottom:1rem;">Drag each greeting to its time of day.</p>'+
+    '<div id="dragPool" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1.5rem; min-height:48px; padding:10px; border:1.5px dashed #D3D1C7; border-radius:10px;">'+
+    greetings.map(g=>{
+      const c = TIME_COLORS[g.t];
+      return '<div class="dragChip" draggable="true" data-t="'+g.t+'" style="cursor:grab; padding:10px 16px 10px 10px; border-radius:24px; background:'+c.bg+'; border:1.5px solid '+c.border+'; color:'+c.text+'; font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px;">'+
+        timeIcon(g.t,22)+'<span>'+g.phrase+'</span></div>';
+    }).join('')+
+    '</div>'+
+    '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">'+
+    ['morning','afternoon','evening'].map(t=>{
+      const c = TIME_COLORS[t];
+      return '<div class="dropZone" data-t="'+t+'" style="min-height:90px; border:1.5px dashed '+c.border+'; background:'+c.bg+'; opacity:0.6; border-radius:12px; padding:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;">'+
+        timeIcon(t,30)+
+        '</div>';
+    }).join('')+
+    '</div>'+
+    '<div id="dragFeedback" style="margin-top:1rem; font-size:13px; min-height:18px;"></div>'+
+    navHTML(true)+
+    '</div>';
+}
+
+function organizeHTML(){
+  const lines = [
+    {id:'l1', text:'Good morning, Mr. Pérez!'},
+    {id:'l2', text:'Good morning! How are you?'},
+    {id:'l3', text:'I am fine, thank you.'},
+    {id:'l4', text:'Goodbye, see you tomorrow!'}
+  ];
+  const shuffled = [lines[3],lines[1],lines[0],lines[2]];
+  return '<div>'+
+    '<p style="font-size:14px; color:#5F5E5A; margin-bottom:1rem;">Put the conversation in the correct order. Drag the lines.</p>'+
+    '<div id="orgList" style="display:flex; flex-direction:column; gap:8px;">'+
+    shuffled.map((l)=>'<div class="orgLine" draggable="true" data-id="'+l.id+'" style="cursor:grab; border:1.5px solid #D3D1C7; background:#fff; border-radius:10px; padding:12px 14px; font-size:14px; display:flex; align-items:center; gap:10px;">'+
+      '<i class="ti ti-grip-vertical" style="font-size:16px; color:#888780;" aria-hidden="true"></i><span>'+l.text+'</span></div>').join('')+
+    '</div>'+
+    '<div id="orgFeedback" style="margin-top:1rem; font-size:13px; min-height:18px;"></div>'+
+    '<div style="display:flex; justify-content:space-between; margin-top:1.5rem; padding-top:1rem; border-top:1px solid #E5E3DA;">'+
+    (currentStep>0 ? '<button id="backBtn" style="display:flex; align-items:center; gap:4px;"><i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i>Back</button>' : '<span></span>')+
+    '<button id="orgCheckBtn" style="display:flex; align-items:center; gap:4px;">Check order</button>'+
+    '</div>'+
+    '</div>';
+}
+
+function speakHTML(){
+  const prompts = [
+    {id:'s1', text:'Good morning!'},
+    {id:'s2', text:'Good afternoon!'},
+    {id:'s3', text:'Good evening, goodbye!'}
+  ];
+  return '<div>'+
+    '<p style="font-size:14px; color:#5F5E5A; margin-bottom:0.5rem;">Listen, then record yourself saying each phrase. Listen back to check your pronunciation.</p>'+
+    '<div id="micWarning" style="display:none; font-size:13px; color:#854F0B; background:#FAEEDA; border:1px solid #EF9F27; border-radius:8px; padding:10px 12px; margin-bottom:12px;">'+
+    '<i class="ti ti-microphone-off" style="font-size:14px; vertical-align:-2px; margin-right:6px;" aria-hidden="true"></i>Microphone not available. Practice reading the phrase out loud instead.</div>'+
+    '<div style="display:flex; flex-direction:column; gap:12px;">'+
+    prompts.map(p=>'<div style="border:1.5px solid #D3D1C7; border-radius:12px; padding:14px 16px;">'+
+      '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">'+
+      '<span style="font-size:16px; font-weight:600;">'+p.text+'</span>'+
+      '<button class="playBtn" data-phrase="'+p.text+'" style="padding:6px 10px;"><i class="ti ti-volume" style="font-size:16px;" aria-hidden="true"></i></button>'+
+      '</div>'+
+      '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'+
+      '<button class="recBtn" data-id="'+p.id+'" style="display:flex; align-items:center; gap:6px;"><i class="ti ti-microphone" style="font-size:14px;" aria-hidden="true"></i><span class="recLabel">Record</span></button>'+
+      '<button class="playRecBtn" data-id="'+p.id+'" style="display:none; align-items:center; gap:6px;"><i class="ti ti-player-play" style="font-size:14px;" aria-hidden="true"></i>Play mine</button>'+
+      '<span class="recStatus" data-id="'+p.id+'" style="font-size:12px; color:#888780;"></span>'+
+      '</div>'+
+      '</div>').join('')+
+    '</div>'+
+    navHTML(false,true)+
+    '</div>';
+}
+
+function navHTML(locked, isLast){
+  return '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.5rem; padding-top:1rem; border-top:1px solid #E5E3DA;">'+
+    (currentStep>0 ? '<button id="backBtn" style="display:flex; align-items:center; gap:4px;"><i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i>Back</button>' : '<span></span>')+
+    (isLast ? '<button id="finishBtn" style="background:#1B3A6B; color:#fff; border-color:#1B3A6B; display:flex; align-items:center; gap:4px;">Finish<i class="ti ti-check" style="font-size:14px;" aria-hidden="true"></i></button>' :
+      '<button id="nextBtn" data-needs-complete="'+(locked?'1':'0')+'" style="display:flex; align-items:center; gap:4px;">Next<i class="ti ti-arrow-right" style="font-size:14px;" aria-hidden="true"></i></button>')+
+    '</div>';
+}
+
+function attachHandlers(step){
+  const back = document.getElementById('backBtn');
+  if(back) back.onclick = ()=>{ currentStep--; renderStep(); };
+  const next = document.getElementById('nextBtn');
+  if(next) next.onclick = ()=>{
+    if(next.getAttribute('data-needs-complete')==='1'){
+      next.style.borderColor = '#E24B4A';
+      next.style.color = '#A32D2D';
+      const warn = document.createElement('div');
+      warn.textContent = 'Finish the activity above before moving on.';
+      warn.style.cssText = 'position:absolute; font-size:12px; color:#A32D2D; margin-top:38px; margin-left:-180px;';
+      setTimeout(()=>{ next.style.borderColor=''; next.style.color=''; }, 1200);
+      return;
+    }
+    currentStep++; renderStep();
+  };
+  const finish = document.getElementById('finishBtn');
+  if(finish) finish.onclick = ()=>{ renderFinish(); };
+
+  if(step==='listen'){
+    document.querySelectorAll('.listenCard').forEach(btn=>{
+      btn.onclick = ()=> speak(btn.getAttribute('data-phrase'));
+    });
+  }
+
+  if(step==='match'){
+    let selectedPhrase = null;
+    const fb = document.getElementById('matchFeedback');
+    let correct = 0;
+    document.querySelectorAll('.matchPhrase').forEach(btn=>{
+      btn.onclick = ()=>{
+        document.querySelectorAll('.matchPhrase').forEach(b=>{ if(!b.disabled) b.style.borderColor='#D3D1C7'; });
+        btn.style.borderColor = '#C8991A';
+        selectedPhrase = btn;
+      };
+    });
+    document.querySelectorAll('.matchClock').forEach(btn=>{
+      btn.onclick = ()=>{
+        if(!selectedPhrase){ fb.innerHTML = '<span style="color:#854F0B;">Tap a greeting first.</span>'; return; }
+        const match = selectedPhrase.getAttribute('data-t') === btn.getAttribute('data-t');
+        if(match){
+          selectedPhrase.style.borderColor='#639922';
+          selectedPhrase.style.background='#EAF3DE';
+          selectedPhrase.disabled = true;
+          btn.style.borderColor='#639922';
+          btn.style.background='#EAF3DE';
+          btn.disabled = true;
+          correct++;
+          fb.innerHTML = '<span style="color:#3B6D11;"><i class="ti ti-check" style="font-size:14px; vertical-align:-2px;" aria-hidden="true"></i> Correct!</span>';
+          if(correct===3){
+            fb.innerHTML += '<br><span style="color:#3B6D11; font-weight:600;">All matched! Tap Next.</span>';
+            document.getElementById('nextBtn').setAttribute('data-needs-complete','0');
+          }
+        } else {
+          btn.style.borderColor='#E24B4A';
+          fb.innerHTML = '<span style="color:#A32D2D;">Try again.</span>';
+          setTimeout(()=>{ btn.style.borderColor='#D3D1C7'; }, 600);
+        }
+        selectedPhrase = null;
+      };
+    });
+  }
+
+  if(step==='drag'){
+    const fb = document.getElementById('dragFeedback');
+    let placedCount = 0;
+    let dragged = null;
+    document.querySelectorAll('.dragChip').forEach(chip=>{
+      chip.ondragstart = ()=>{ dragged = chip; };
+    });
+    document.querySelectorAll('.dropZone').forEach(zone=>{
+      zone.ondragover = (e)=> e.preventDefault();
+      zone.ondrop = (e)=>{
+        e.preventDefault();
+        if(!dragged) return;
+        if(dragged.getAttribute('data-t') === zone.getAttribute('data-t')){
+          zone.style.opacity = '1';
+          zone.appendChild(dragged);
+          dragged.setAttribute('draggable','false');
+          dragged.style.cursor='default';
+          placedCount++;
+          fb.innerHTML = '<span style="color:#3B6D11;"><i class="ti ti-check" style="font-size:14px; vertical-align:-2px;" aria-hidden="true"></i> Correct!</span>';
+          if(placedCount===3){
+            fb.innerHTML += '<br><span style="color:#3B6D11; font-weight:600;">All done! Tap Next.</span>';
+            document.getElementById('nextBtn').setAttribute('data-needs-complete','0');
+          }
+        } else {
+          fb.innerHTML = '<span style="color:#A32D2D;">Not quite. Try a different box.</span>';
+        }
+        dragged = null;
+      };
+    });
+  }
+
+  if(step==='organize'){
+    const list = document.getElementById('orgList');
+    const fb = document.getElementById('orgFeedback');
+    const correctOrder = ['l1','l2','l3','l4'];
+    let dragged = null;
+    function bindDrag(){
+      list.querySelectorAll('.orgLine').forEach(line=>{
+        line.ondragstart = ()=>{ dragged = line; };
+        line.ondragover = (e)=> e.preventDefault();
+        line.ondrop = (e)=>{
+          e.preventDefault();
+          if(!dragged || dragged===line) return;
+          const all = Array.from(list.children);
+          const di = all.indexOf(dragged), li = all.indexOf(line);
+          if(di < li) line.after(dragged); else line.before(dragged);
+          dragged = null;
+        };
+      });
+    }
+    bindDrag();
+    const checkBtn = document.getElementById('orgCheckBtn');
+    checkBtn.onclick = ()=>{
+      const order = Array.from(list.children).map(l=>l.getAttribute('data-id'));
+      const ok = JSON.stringify(order)===JSON.stringify(correctOrder);
+      if(ok){
+        fb.innerHTML = '<span style="color:#3B6D11;"><i class="ti ti-check" style="font-size:14px; vertical-align:-2px;" aria-hidden="true"></i> Perfect order!</span>';
+        checkBtn.innerHTML = 'Next<i class="ti ti-arrow-right" style="font-size:14px; margin-left:4px;" aria-hidden="true"></i>';
+        checkBtn.onclick = ()=>{ currentStep++; renderStep(); };
+      } else {
+        fb.innerHTML = '<span style="color:#A32D2D;">Not yet in order. Keep adjusting.</span>';
+      }
+    };
+  }
+
+  if(step==='speak'){
+    document.querySelectorAll('.playBtn').forEach(btn=>{
+      btn.onclick = ()=> speak(btn.getAttribute('data-phrase'));
+    });
+
+    let mediaRecorder, chunks, stream;
+    const recordings = {};
+
+    document.querySelectorAll('.recBtn').forEach(btn=>{
+      const id = btn.getAttribute('data-id');
+      let recording = false;
+      btn.onclick = async ()=>{
+        if(!recording){
+          try{
+            stream = await navigator.mediaDevices.getUserMedia({audio:true});
+            chunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = e=> chunks.push(e.data);
+            mediaRecorder.onstop = ()=>{
+              const blob = new Blob(chunks, {type:'audio/webm'});
+              recordings[id] = URL.createObjectURL(blob);
+              const status = document.querySelector('.recStatus[data-id="'+id+'"]');
+              status.innerHTML = '<i class="ti ti-check" style="font-size:12px; color:#3B6D11; vertical-align:-1px;" aria-hidden="true"></i> Saved';
+              const playRec = document.querySelector('.playRecBtn[data-id="'+id+'"]');
+              playRec.style.display = 'inline-flex';
+              stream.getTracks().forEach(t=>t.stop());
+            };
+            mediaRecorder.start();
+            recording = true;
+            btn.querySelector('.recLabel').textContent = 'Stop';
+            btn.querySelector('i').className = 'ti ti-player-stop';
+          }catch(err){
+            document.getElementById('micWarning').style.display = 'block';
+          }
+        } else {
+          mediaRecorder.stop();
+          recording = false;
+          btn.querySelector('.recLabel').textContent = 'Record again';
+          btn.querySelector('i').className = 'ti ti-microphone';
+        }
+      };
+    });
+
+    document.querySelectorAll('.playRecBtn').forEach(btn=>{
+      const id = btn.getAttribute('data-id');
+      btn.onclick = ()=>{
+        if(recordings[id]){
+          const audio = new Audio(recordings[id]);
+          audio.play();
+        }
+      };
+    });
+  }
+}
+
+function renderFinish(){
+  document.getElementById('stepContainer').innerHTML =
+    '<div style="text-align:center; padding:2.5rem 1rem;">'+
+    '<div style="width:56px; height:56px; border-radius:50%; background:#EAF3DE; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">'+
+    '<i class="ti ti-check" style="font-size:28px; color:#3B6D11;" aria-hidden="true"></i></div>'+
+    '<div style="font-size:18px; font-weight:600; color:#1B3A6B; margin-bottom:8px;">Well done!</div>'+
+    '<div style="font-size:14px; color:#5F5E5A; max-width:380px; margin:0 auto;">You practiced greeting and saying goodbye in English for morning, afternoon, and evening.</div>'+
+    '<button id="restartBtn" style="margin-top:1.5rem; display:inline-flex; align-items:center; gap:6px;"><i class="ti ti-refresh" style="font-size:14px;" aria-hidden="true"></i>Practice again</button>'+
+    '</div>';
+  document.getElementById('progressBar').innerHTML = '';
+  document.getElementById('restartBtn').onclick = ()=>{ currentStep=0; renderStep(); };
+}
+
+renderStep();
+})();
+</script>
+
+</body>
+</html>
